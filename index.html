@@ -1,1 +1,853 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>STATS Joueur · Suivi parent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Stats Joueur" />
+  <meta name="theme-color" content="#f3f5fb" />
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#f3f5fb;
+      --bg2:#eaedf6;
+      --surf:#ffffff;
+      --surf2:#f1f4fb;
+      --surf3:#e6eaf4;
+      --line:rgba(15,23,42,.08);
+      --line2:rgba(15,23,42,.14);
+      --txt:#16213c;
+      --muted:#64748b;
+      --muted2:#9aa6bf;
+      --orange:#f97316;
+      --orange-soft:rgba(249,115,22,.12);
+      --cyan:#0891b2;
+      --green:#16a34a;
+      --green-soft:rgba(22,163,74,.12);
+      --red:#ef4444;
+      --red-soft:rgba(239,68,68,.10);
+      --violet:#7c3aed;
+      --pink:#db2777;
+      --teal:#0d9488;
+      --amber:#d97706;
+    }
+    * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+    html, body { width:100%; min-height:100%; }
+    body {
+      background:
+        radial-gradient(1100px 560px at 50% -12%, rgba(249,115,22,.10), transparent 60%),
+        radial-gradient(820px 460px at 92% 4%, rgba(8,145,178,.07), transparent 55%),
+        var(--bg);
+      color:var(--txt);
+      font-family:'Outfit', system-ui, sans-serif;
+      -webkit-font-smoothing:antialiased;
+      user-select:none;
+      overscroll-behavior-y:none;
+    }
+    input, button, select { font:inherit; color:inherit; }
+    button { cursor:pointer; border:none; background:none; }
 
+    .app {
+      max-width:520px; margin:0 auto; min-height:100vh;
+      display:flex; flex-direction:column;
+      padding-top:env(safe-area-inset-top,0);
+      position:relative;
+    }
+    .scroll {
+      flex:1; overflow-y:auto; overflow-x:hidden;
+      padding:0 14px calc(150px + env(safe-area-inset-bottom,0));
+      -webkit-overflow-scrolling:touch;
+    }
+
+    /* ====== HEADER SCORE TICKER ====== */
+    .topwrap { padding:14px 14px 0; }
+    .ticker {
+      background:linear-gradient(135deg, #ffffff 0%, #fbfcff 100%);
+      border:1px solid var(--line);
+      border-radius:22px;
+      padding:14px 16px 16px;
+      box-shadow:0 18px 44px -22px rgba(15,23,42,.28), inset 0 1px 0 rgba(255,255,255,.7);
+      position:relative; overflow:hidden;
+    }
+    .ticker::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(90deg, transparent, rgba(249,115,22,.05), transparent);
+      pointer-events:none;
+    }
+    .ticker-top {
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      margin-bottom:10px;
+    }
+    .brand { display:flex; align-items:center; gap:8px; }
+    .brand-dot {
+      width:30px; height:30px; border-radius:9px;
+      background:linear-gradient(135deg,var(--orange),#ff9d4d);
+      display:flex; align-items:center; justify-content:center;
+      font-size:1rem; box-shadow:0 4px 14px rgba(255,122,26,.4);
+    }
+    .brand-name { font-family:'Bebas Neue', sans-serif; font-size:1.35rem; letter-spacing:.06em; line-height:1; }
+    .brand-sub { font-size:.62rem; color:var(--muted); letter-spacing:.16em; text-transform:uppercase; margin-top:1px; }
+
+    .qt-pill {
+      display:flex; align-items:center; gap:6px;
+      background:var(--surf2); border:1px solid var(--line2);
+      border-radius:999px; padding:5px 12px;
+      font-family:'Bebas Neue', sans-serif; font-size:1rem; letter-spacing:.05em;
+    }
+    .qt-pill .dot { width:7px; height:7px; border-radius:50%; background:var(--muted2); }
+    .qt-pill.run .dot { background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.3s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+    .ticker-main {
+      display:grid; grid-template-columns:1fr auto; gap:10px; align-items:end;
+    }
+    .player-name { font-family:'Bebas Neue', sans-serif; font-size:1.45rem; letter-spacing:.04em; line-height:1; color:var(--txt); }
+    .player-meta { font-size:.72rem; color:var(--muted); margin-top:3px; }
+    .pts-big {
+      font-family:'Bebas Neue', sans-serif; font-size:3.6rem; line-height:.82;
+      background:linear-gradient(180deg,#fb923c,#ea580c);
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+      text-align:right;
+    }
+    .pts-label { font-size:.6rem; color:var(--muted); letter-spacing:.18em; text-transform:uppercase; text-align:right; margin-top:2px; }
+
+    .minis {
+      display:grid; grid-template-columns:repeat(6,1fr); gap:6px; margin-top:14px;
+    }
+    .mini {
+      background:var(--surf2); border:1px solid var(--line);
+      border-radius:12px; padding:7px 2px; text-align:center;
+    }
+    .mini-v { font-family:'Bebas Neue', sans-serif; font-size:1.25rem; line-height:1; }
+    .mini-l { font-size:.54rem; color:var(--muted); letter-spacing:.06em; text-transform:uppercase; margin-top:2px; }
+
+    /* ====== CHRONO BAR ====== */
+    .chrono {
+      margin-top:12px; display:flex; align-items:center; gap:8px;
+    }
+    .chrono-time {
+      flex:0 0 auto; min-width:96px;
+      background:var(--surf2); border:1px solid var(--line2); border-radius:14px;
+      padding:10px 0; text-align:center;
+      font-family:'Bebas Neue', sans-serif; font-size:1.7rem; letter-spacing:.04em; line-height:1;
+    }
+    .chrono-time.run { color:var(--green); border-color:rgba(52,211,153,.4); }
+    .chrono-btn {
+      flex:1; height:46px; border-radius:14px; border:1px solid var(--line2);
+      font-family:'Bebas Neue', sans-serif; font-size:1.15rem; letter-spacing:.06em;
+      display:flex; align-items:center; justify-content:center; gap:6px;
+      background:var(--surf2);
+    }
+    .chrono-btn.play { background:var(--green-soft); border-color:rgba(52,211,153,.45); color:var(--green); }
+    .chrono-btn.pause { background:var(--red-soft); border-color:rgba(251,93,93,.4); color:var(--red); }
+    .chrono-btn:active { transform:scale(.96); }
+    .chrono-reset {
+      flex:0 0 auto; width:46px; height:46px; border-radius:14px;
+      background:var(--surf2); border:1px solid var(--line2);
+      display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+    }
+    .chrono-reset:active { transform:scale(.94); }
+
+    .qt-switch { display:flex; gap:5px; margin-top:9px; }
+    .qt-tab {
+      flex:1; padding:8px 0; border-radius:11px;
+      background:var(--surf2); border:1px solid var(--line);
+      font-family:'Bebas Neue', sans-serif; font-size:.95rem; letter-spacing:.04em; color:var(--muted);
+      text-align:center;
+    }
+    .qt-tab.active { background:var(--orange-soft); border-color:rgba(255,122,26,.5); color:var(--orange); }
+    .qt-tab:active { transform:scale(.96); }
+
+    /* ====== SECTION TITLE ====== */
+    .sec-title {
+      display:flex; align-items:center; gap:8px;
+      font-family:'Bebas Neue', sans-serif; font-size:1.05rem; letter-spacing:.08em;
+      color:var(--muted); margin:20px 4px 10px; text-transform:uppercase;
+    }
+    .sec-title::after { content:''; flex:1; height:1px; background:var(--line); }
+
+    /* ====== SHOOT CARDS ====== */
+    .shoot-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+    .shoot-card {
+      background:var(--surf); border:1px solid var(--line);
+      border-radius:18px; padding:12px 10px 10px; position:relative; overflow:hidden;
+    }
+    .shoot-card::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px;
+      background:var(--accent);
+    }
+    .shoot-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px; }
+    .shoot-title { font-family:'Bebas Neue', sans-serif; font-size:1.15rem; letter-spacing:.05em; color:var(--accent); }
+    .shoot-val { font-family:'Bebas Neue', sans-serif; font-size:1.7rem; line-height:1; }
+    .shoot-sub { font-size:.62rem; color:var(--muted); margin-bottom:9px; min-height:14px; }
+    .shoot-btns { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+    .sbtn {
+      height:50px; border-radius:13px; font-family:'Bebas Neue', sans-serif; font-size:1.7rem; line-height:1;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--line2);
+    }
+    .sbtn.plus { background:var(--accent); color:#fff; border-color:transparent; box-shadow:0 5px 14px -5px var(--accent); }
+    .sbtn.minus { background:var(--surf2); color:var(--muted); }
+    .sbtn:active { transform:scale(.93); }
+
+    /* ====== STAT TILES ====== */
+    .tiles { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+    .tile {
+      background:var(--surf); border:1px solid var(--line);
+      border-radius:18px; padding:12px; position:relative; overflow:hidden;
+    }
+    .tile::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent);
+    }
+    .tile-title { font-family:'Bebas Neue', sans-serif; font-size:1.05rem; letter-spacing:.05em; color:var(--accent); margin-bottom:9px; }
+    .tile-row { display:grid; gap:7px; }
+    .tile-row.two { grid-template-columns:1fr 1fr; }
+    .tbtn {
+      height:52px; border-radius:13px; border:1px solid var(--line2); background:var(--surf2);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+    }
+    .tbtn:active { transform:scale(.95); }
+    .tbtn-l { font-size:.66rem; letter-spacing:.05em; color:var(--muted); text-transform:uppercase; }
+    .tbtn-v { font-family:'Bebas Neue', sans-serif; font-size:1.5rem; line-height:1; }
+
+    /* ====== IDENTITY (player tab) ====== */
+    .card {
+      background:var(--surf); border:1px solid var(--line);
+      border-radius:18px; padding:16px;
+    }
+    .field { margin-bottom:14px; }
+    .field:last-child { margin-bottom:0; }
+    .field label { display:block; font-size:.7rem; color:var(--muted); letter-spacing:.1em; text-transform:uppercase; margin-bottom:6px; }
+    .field input {
+      width:100%; height:46px; background:var(--surf2); border:1px solid var(--line2);
+      border-radius:13px; padding:0 14px; outline:none; font-size:1rem;
+    }
+    .field input:focus { border-color:var(--orange); }
+    .field-row { display:grid; grid-template-columns:90px 1fr; gap:10px; }
+
+    .big-jersey {
+      width:120px; height:120px; margin:4px auto 14px; position:relative;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .big-jersey svg { width:100%; height:100%; }
+    .big-jersey .jn {
+      position:absolute; top:42%; left:50%; transform:translate(-50%,-50%);
+      font-family:'Bebas Neue', sans-serif; font-size:2.6rem; color:#0a0e1a; line-height:1;
+    }
+
+    .quick-actions { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:14px; }
+    .qa {
+      height:50px; border-radius:14px; border:1px solid var(--line2); background:var(--surf2);
+      display:flex; align-items:center; justify-content:center; gap:8px;
+      font-weight:600; font-size:.92rem;
+    }
+    .qa:active { transform:scale(.97); }
+    .qa.danger { background:var(--red-soft); border-color:rgba(251,93,93,.4); color:var(--red); }
+    .qa.full { grid-column:1 / -1; }
+
+    /* ====== SUMMARY TAB ====== */
+    .stat-line {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:11px 0; border-bottom:1px solid var(--line);
+    }
+    .stat-line:last-child { border-bottom:none; }
+    .stat-line .k { color:var(--muted); font-size:.9rem; }
+    .stat-line .v { font-family:'Bebas Neue', sans-serif; font-size:1.3rem; letter-spacing:.03em; }
+    .stat-line .v small { font-family:'Outfit'; font-size:.72rem; color:var(--muted); margin-left:5px; letter-spacing:0; }
+
+    .qt-table { width:100%; border-collapse:collapse; font-size:.78rem; }
+    .qt-table th, .qt-table td { padding:7px 4px; text-align:center; border-bottom:1px solid var(--line); }
+    .qt-table th { color:var(--muted); font-weight:600; font-size:.66rem; letter-spacing:.04em; text-transform:uppercase; }
+    .qt-table td:first-child, .qt-table th:first-child { text-align:left; font-family:'Bebas Neue',sans-serif; font-size:.95rem; letter-spacing:.04em; }
+    .qt-table tr td:nth-child(2) { color:var(--orange); font-weight:700; }
+
+    .export-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:9px; margin-top:8px; }
+    .exp {
+      height:48px; border-radius:14px; border:1px solid var(--line2); background:var(--surf2);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px;
+      font-size:.78rem; font-weight:600;
+    }
+    .exp:active { transform:scale(.96); }
+    .exp .ico { font-size:1rem; }
+
+    /* ====== BOTTOM TAB BAR ====== */
+    .tabbar {
+      position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+      width:100%; max-width:520px;
+      background:rgba(255,255,255,.92); backdrop-filter:blur(16px);
+      border-top:1px solid var(--line2);
+      box-shadow:0 -10px 30px -16px rgba(15,23,42,.18);
+      display:grid; grid-template-columns:repeat(3,1fr);
+      padding:8px 10px calc(8px + env(safe-area-inset-bottom,0));
+      z-index:50;
+    }
+    .tab {
+      display:flex; flex-direction:column; align-items:center; gap:3px;
+      padding:6px 0; border-radius:14px; color:var(--muted2);
+    }
+    .tab.active { color:var(--orange); }
+    .tab .ti { font-size:1.3rem; line-height:1; }
+    .tab .tl { font-size:.62rem; letter-spacing:.04em; font-weight:600; }
+    .tab:active { transform:scale(.92); }
+
+    /* ====== TOAST ====== */
+    .toast {
+      position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom,0));
+      transform:translateX(-50%);
+      background:var(--surf); border:1px solid var(--line2);
+      color:var(--txt); padding:9px 18px; border-radius:999px;
+      font-size:.84rem; font-weight:600; z-index:60;
+      box-shadow:0 14px 34px -12px rgba(15,23,42,.3);
+      animation:toastIn .2s ease;
+    }
+    @keyframes toastIn { from{opacity:0; transform:translate(-50%,8px)} to{opacity:1; transform:translate(-50%,0)} }
+
+    /* ====== FOOTER (PI + KO-FI) ====== */
+    .footer {
+      margin-top:24px; padding:16px 4px 8px; text-align:center;
+      border-top:1px solid var(--line);
+    }
+    .kofi {
+      display:inline-flex; align-items:center; gap:7px;
+      background:linear-gradient(135deg,var(--orange),#ff9d4d); color:#1a0f04;
+      text-decoration:none; padding:11px 22px; border-radius:14px;
+      font-weight:800; font-size:.92rem;
+      box-shadow:0 10px 26px -10px rgba(255,122,26,.7);
+    }
+    .kofi:active { transform:scale(.97); }
+    .kofi-note { font-size:.74rem; color:var(--muted); margin-top:9px; }
+    .pi { font-size:.68rem; color:var(--muted2); margin-top:14px; line-height:1.5; }
+
+    .hidden { display:none !important; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {useState,useEffect,useRef,useCallback,useMemo} = React;
+const e = React.createElement;
+
+const COLORS = { two:'#f97316', three:'#0891b2', ft:'#16a34a', reb:'#7c3aed', ast:'#db2777', def:'#0d9488', misc:'#d97706' };
+
+const INIT_COUNTERS = {
+  twoAttempted:0, twoMade:0,
+  threeAttempted:0, threeMade:0,
+  ftAttempted:0, ftMade:0,
+  reboundsOff:0, reboundsDef:0,
+  assists:0, interceptions:0, blocks:0,
+  turnovers:0, fouls:0
+};
+const Q_KEYS = ['QT1','QT2','QT3','QT4','OT'];
+const STORAGE_KEY = 'stats-basket-joueur-parent-v1';
+
+const initQuarterCounters = () => { const o={}; Q_KEYS.forEach(q=>o[q]={...INIT_COUNTERS}); return o; };
+const initQuarterTimes = () => ({QT1:0,QT2:0,QT3:0,QT4:0,OT:0});
+const initPlayTime = () => ({ total:0, quarterTimes:initQuarterTimes() });
+
+const fmt = s => String(Math.floor((s||0)/60)).padStart(2,'0')+':'+String((s||0)%60).padStart(2,'0');
+const pct = (m,a) => a ? ((m/a)*100).toFixed(1)+' %' : '';
+const pctMini = (m,a) => a ? Math.round((m/a)*100)+'%' : '0%';
+const slugify = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\W+/g,'_').replace(/^_+|_+$/g,'');
+const deepClone = v => JSON.parse(JSON.stringify(v));
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function copyText(t){ if(navigator.clipboard&&navigator.clipboard.writeText) return navigator.clipboard.writeText(t); return Promise.reject(); }
+function dlFile(content,type,name){
+  const blob=new Blob([content],{type}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function JerseySvg(){
+  return e('svg', {viewBox:'0 0 120 110', xmlns:'http://www.w3.org/2000/svg'},
+    e('defs', null,
+      e('linearGradient', {id:'jg', x1:'0', y1:'0', x2:'0', y2:'1'},
+        e('stop', {offset:'0', stopColor:'#ff9d4d'}),
+        e('stop', {offset:'1', stopColor:'#ff7a1a'})
+      )
+    ),
+    e('path', {
+      d:'M35 8 C43 18, 77 18, 85 8 L103 16 L98 31 L98 91 C98 99 92 105 84 105 L36 105 C28 105 22 99 22 91 L22 31 L17 16 Z',
+      fill:'url(#jg)', stroke:'#0a0e1a', strokeWidth:3
+    }),
+    e('path', {
+      d:'M46 8 C48 15, 54 20, 60 20 C66 20, 72 15, 74 8',
+      fill:'none', stroke:'#0a0e1a', strokeWidth:3
+    })
+  );
+}
+
+function App(){
+  const [tab, setTab] = useState('match'); // match | joueur | resume
+  const [playerName, setPlayerName] = useState('');
+  const [playerNumber, setPlayerNumber] = useState('');
+  const [matchDate, setMatchDate] = useState('');
+  const [opponent, setOpponent] = useState('');
+  const [matchScore, setMatchScore] = useState('');
+
+  const [totals, setTotals] = useState({...INIT_COUNTERS});
+  const [quarterStats, setQuarterStats] = useState(() => initQuarterCounters());
+  const [playTime, setPlayTime] = useState(() => initPlayTime());
+
+  const [currentQ, setCurrentQ] = useState('QT1');
+  const [quarterTimes, setQuarterTimes] = useState(initQuarterTimes());
+  const [timerSec, setTimerSec] = useState(0);
+  const [timerRunning, setTimerRunning] = useState(false);
+  const [onCourt, setOnCourt] = useState(true);
+  const [notice, setNotice] = useState('');
+
+  const timerRef = useRef(null);
+  const currentQRef = useRef('QT1');
+  const quarterTimesRef = useRef(initQuarterTimes());
+  const onCourtRef = useRef(true);
+  const historyRef = useRef([]);
+
+  useEffect(()=>{ currentQRef.current = currentQ; }, [currentQ]);
+  useEffect(()=>{ quarterTimesRef.current = quarterTimes; }, [quarterTimes]);
+  useEffect(()=>{ onCourtRef.current = onCourt; }, [onCourt]);
+
+  const vibrate = useCallback(ms => { if(navigator.vibrate) navigator.vibrate(ms||10); }, []);
+  const flash = useCallback(msg => {
+    setNotice(msg);
+    window.clearTimeout(flash.tid);
+    flash.tid = window.setTimeout(()=>setNotice(''), 1300);
+  }, []);
+
+  const snapshot = useCallback(() => ({
+    totals:deepClone(totals), quarterStats:deepClone(quarterStats), playTime:deepClone(playTime),
+    quarterTimes:deepClone(quarterTimes), currentQ, timerSec, onCourt
+  }), [totals, quarterStats, playTime, quarterTimes, currentQ, timerSec, onCourt]);
+  const pushHistory = useCallback(() => {
+    historyRef.current.push(snapshot());
+    if(historyRef.current.length>80) historyRef.current.shift();
+  }, [snapshot]);
+
+  // --- Load ---
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return;
+      const s = JSON.parse(raw);
+      if(typeof s.playerName==='string') setPlayerName(s.playerName);
+      if(typeof s.playerNumber==='string') setPlayerNumber(s.playerNumber);
+      if(typeof s.matchDate==='string') setMatchDate(s.matchDate);
+      if(typeof s.opponent==='string') setOpponent(s.opponent);
+      if(typeof s.matchScore==='string') setMatchScore(s.matchScore);
+      if(s.totals) setTotals({...INIT_COUNTERS, ...s.totals});
+      if(s.quarterStats){ const q=initQuarterCounters(); Q_KEYS.forEach(k=>{ if(s.quarterStats[k]) q[k]={...INIT_COUNTERS, ...s.quarterStats[k]}; }); setQuarterStats(q); }
+      if(s.playTime) setPlayTime({ total:s.playTime.total||0, quarterTimes:{...initQuarterTimes(), ...(s.playTime.quarterTimes||{})} });
+      if(s.quarterTimes) setQuarterTimes({...initQuarterTimes(), ...s.quarterTimes});
+      if(s.currentQ) setCurrentQ(s.currentQ);
+      if(typeof s.timerSec==='number') setTimerSec(s.timerSec);
+      if(typeof s.onCourt==='boolean') setOnCourt(s.onCourt);
+    } catch(err){}
+  }, []);
+
+  // --- Autosave ---
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        playerName, playerNumber, matchDate, opponent, matchScore,
+        totals, quarterStats, playTime, quarterTimes, currentQ, timerSec, onCourt
+      }));
+    } catch(err){}
+  }, [playerName, playerNumber, matchDate, opponent, matchScore, totals, quarterStats, playTime, quarterTimes, currentQ, timerSec, onCourt]);
+
+  // --- Timer cleanup ---
+  useEffect(() => () => { if(timerRef.current) clearInterval(timerRef.current); }, []);
+
+  // --- Accrue play time each tick when running & on court ---
+  useEffect(() => {
+    if(!timerRunning || !onCourt) return;
+    setPlayTime(prev => {
+      const next = { total:(prev.total||0)+1, quarterTimes:{...prev.quarterTimes} };
+      next.quarterTimes[currentQ] = (next.quarterTimes[currentQ]||0)+1;
+      return next;
+    });
+  }, [timerSec]);
+
+  const startTimer = useCallback(() => {
+    if(timerRef.current) return;
+    timerRef.current = setInterval(()=>setTimerSec(s=>s+1), 1000);
+    setTimerRunning(true);
+  }, []);
+  const pauseTimer = useCallback(() => {
+    if(timerRef.current){ clearInterval(timerRef.current); timerRef.current=null; }
+    setTimerRunning(false);
+  }, []);
+  const toggleTimer = useCallback(() => { timerRef.current ? pauseTimer() : startTimer(); }, [startTimer, pauseTimer]);
+  const resetTimer = useCallback(() => {
+    pushHistory();
+    setTimerSec(0);
+    setQuarterTimes(qt => ({...qt, [currentQRef.current]:0}));
+    vibrate(8);
+  }, [pushHistory, vibrate]);
+  const changeQuarter = useCallback((newQ) => {
+    pushHistory();
+    setQuarterTimes(prev => ({...prev, [currentQRef.current]: timerSec}));
+    pauseTimer();
+    setCurrentQ(newQ);
+    setTimerSec(quarterTimesRef.current[newQ] || 0);
+    vibrate(8);
+  }, [pushHistory, pauseTimer, timerSec, vibrate]);
+
+  // --- Stat application ---
+  const applyDelta = useCallback((recipe) => {
+    pushHistory();
+    const q = currentQRef.current;
+    setTotals(prevT => { const t = {...prevT}; recipe(t); return t; });
+    setQuarterStats(prevQ => {
+      const next = deepClone(prevQ);
+      if(!next[q]) next[q] = {...INIT_COUNTERS};
+      recipe(next[q]);
+      return next;
+    });
+    vibrate(10);
+  }, [pushHistory, vibrate]);
+
+  const addShot = useCallback((type, made) => {
+    const map = { two:['twoAttempted','twoMade'], three:['threeAttempted','threeMade'], ft:['ftAttempted','ftMade'] };
+    const pair = map[type];
+    applyDelta(obj => {
+      obj[pair[0]]+=1;
+      if(made) obj[pair[1]]+=1;
+    });
+  }, [applyDelta]);
+
+  const addOne = useCallback((key) => {
+    applyDelta(obj => { obj[key]+=1; });
+  }, [applyDelta]);
+
+  const handleUndo = useCallback(() => {
+    const prev = historyRef.current.pop();
+    if(!prev){ flash('Rien à annuler'); return; }
+    pauseTimer();
+    setTotals(prev.totals); setQuarterStats(prev.quarterStats); setPlayTime(prev.playTime);
+    setQuarterTimes(prev.quarterTimes); setCurrentQ(prev.currentQ);
+    setTimerSec(prev.timerSec); setOnCourt(prev.onCourt);
+    flash('Annulé'); vibrate(10);
+  }, [pauseTimer, flash, vibrate]);
+
+  const handleReset = useCallback(() => {
+    if(!window.confirm('Réinitialiser toutes les statistiques de ce match ?\n(Le nom et le numéro du joueur sont conservés.)')) return;
+    pushHistory();
+    pauseTimer();
+    setTotals({...INIT_COUNTERS});
+    setQuarterStats(initQuarterCounters());
+    setPlayTime(initPlayTime());
+    setQuarterTimes(initQuarterTimes());
+    setCurrentQ('QT1');
+    setTimerSec(0);
+    setOnCourt(true);
+    flash('Match réinitialisé'); vibrate(16);
+  }, [pushHistory, pauseTimer, flash, vibrate]);
+
+  // --- Derived ---
+  const pts = totals.twoMade*2 + totals.threeMade*3 + totals.ftMade;
+  const reb = totals.reboundsOff + totals.reboundsDef;
+  const eval_ = (totals.twoMade*2 + totals.threeMade*3 + totals.ftMade + reb + totals.assists + totals.interceptions + totals.blocks)
+    - ((totals.twoAttempted-totals.twoMade)+(totals.threeAttempted-totals.threeMade)+(totals.ftAttempted-totals.ftMade)+totals.turnovers);
+
+  const displayName = (playerName.trim() ? playerName.trim() : 'Joueur') + (playerNumber.trim() ? ' · #'+playerNumber.trim() : '');
+
+  // --- Exports ---
+  const buildCsv = useCallback(() => {
+    const qtNow = {...quarterTimes, [currentQ]: timerSec};
+    const ptNow = {...playTime.quarterTimes}; // already accrued live
+    const s = totals;
+    const ptsv = s.twoMade*2+s.threeMade*3+s.ftMade;
+    const lines = [];
+    lines.push(['Joueur', playerName||'', 'Numéro', playerNumber||''].join(';'));
+    lines.push(['Date', matchDate||'', 'Adversaire', opponent||'', 'Score', matchScore||''].join(';'));
+    lines.push('');
+    lines.push(['Temps','PTS','EVAL','2P M','2P T','%2P','3P M','3P T','%3P','LF M','LF T','%LF','RO','RD','REB','PDS','INT','CTR','BP','F'].join(';'));
+    lines.push([
+      fmt(playTime.total||0), ptsv, eval_,
+      s.twoMade, s.twoAttempted, pct(s.twoMade,s.twoAttempted),
+      s.threeMade, s.threeAttempted, pct(s.threeMade,s.threeAttempted),
+      s.ftMade, s.ftAttempted, pct(s.ftMade,s.ftAttempted),
+      s.reboundsOff, s.reboundsDef, reb, s.assists, s.interceptions, s.blocks, s.turnovers, s.fouls
+    ].join(';'));
+    lines.push('');
+    lines.push(['Détail par période'].join(';'));
+    lines.push(['Période','Temps','PTS','2M','2T','3M','3T','LFM','LFT','RO','RD','PDS','INT','CTR','BP','F'].join(';'));
+    Q_KEYS.forEach(q => {
+      const r = quarterStats[q] || {...INIT_COUNTERS};
+      const p = ptsCalc(r);
+      lines.push([
+        q, fmt(ptNow[q]||0), p,
+        r.twoMade, r.twoAttempted, r.threeMade, r.threeAttempted, r.ftMade, r.ftAttempted,
+        r.reboundsOff, r.reboundsDef, r.assists, r.interceptions, r.blocks, r.turnovers, r.fouls
+      ].join(';'));
+    });
+    return lines.join('\n');
+  }, [totals, quarterStats, playTime, quarterTimes, currentQ, timerSec, playerName, playerNumber, matchDate, opponent, matchScore, reb, eval_]);
+
+  const buildHtml = useCallback(() => {
+    const s = totals;
+    const ptsv = s.twoMade*2+s.threeMade*3+s.ftMade;
+    let h = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Stats joueur</title><style>'+
+      'body{font-family:Arial,sans-serif;padding:18px;color:#111}h1,h2{margin:0 0 12px}table{border-collapse:collapse;width:100%;margin:10px 0 22px}th,td{border:1px solid #d1d5db;padding:6px 8px;text-align:center}th{background:#ff7a1a;color:#fff}td:first-child{text-align:left}.meta td{border:none;padding:3px 0;text-align:left}.pc{font-weight:bold;background:#f3f4f6;text-align:left}</style></head><body>';
+    h += '<h1>'+esc(playerName||'Joueur')+(playerNumber?' · #'+esc(playerNumber):'')+'</h1>';
+    h += '<table class="meta"><tr><td><b>Date</b></td><td>'+esc(matchDate)+'</td></tr><tr><td><b>Adversaire</b></td><td>'+esc(opponent)+'</td></tr><tr><td><b>Score</b></td><td>'+esc(matchScore)+'</td></tr><tr><td><b>Temps de jeu</b></td><td>'+fmt(playTime.total||0)+'</td></tr></table>';
+    h += '<h2>Résumé</h2><table><tr><th>PTS</th><th>EVAL</th><th>2P</th><th>%2P</th><th>3P</th><th>%3P</th><th>LF</th><th>%LF</th><th>REB</th><th>PDS</th><th>INT</th><th>CTR</th><th>BP</th><th>F</th></tr>';
+    h += '<tr><td>'+ptsv+'</td><td>'+eval_+'</td><td>'+s.twoMade+'/'+s.twoAttempted+'</td><td>'+esc(pct(s.twoMade,s.twoAttempted))+'</td><td>'+s.threeMade+'/'+s.threeAttempted+'</td><td>'+esc(pct(s.threeMade,s.threeAttempted))+'</td><td>'+s.ftMade+'/'+s.ftAttempted+'</td><td>'+esc(pct(s.ftMade,s.ftAttempted))+'</td><td>'+reb+'</td><td>'+s.assists+'</td><td>'+s.interceptions+'</td><td>'+s.blocks+'</td><td>'+s.turnovers+'</td><td>'+s.fouls+'</td></tr></table>';
+    h += '<h2>Détail par période</h2><table><tr><th>Période</th><th>Temps</th><th>PTS</th><th>2M</th><th>2T</th><th>3M</th><th>3T</th><th>LFM</th><th>LFT</th><th>RO</th><th>RD</th><th>PDS</th><th>INT</th><th>CTR</th><th>BP</th><th>F</th></tr>';
+    Q_KEYS.forEach(q => {
+      const r = quarterStats[q] || {...INIT_COUNTERS};
+      h += '<tr><td class="pc">'+esc(q)+'</td><td>'+fmt((playTime.quarterTimes[q])||0)+'</td><td>'+ptsCalc(r)+'</td><td>'+r.twoMade+'</td><td>'+r.twoAttempted+'</td><td>'+r.threeMade+'</td><td>'+r.threeAttempted+'</td><td>'+r.ftMade+'</td><td>'+r.ftAttempted+'</td><td>'+r.reboundsOff+'</td><td>'+r.reboundsDef+'</td><td>'+r.assists+'</td><td>'+r.interceptions+'</td><td>'+r.blocks+'</td><td>'+r.turnovers+'</td><td>'+r.fouls+'</td></tr>';
+    });
+    h += '</table></body></html>';
+    return h;
+  }, [totals, quarterStats, playTime, playerName, playerNumber, matchDate, opponent, matchScore, reb, eval_]);
+
+  function ptsCalc(r){ return r.twoMade*2 + r.threeMade*3 + r.ftMade; }
+
+  const handleCopy = useCallback(() => {
+    const csv = buildCsv();
+    copyText(csv).then(()=>flash('CSV copié')).catch(()=>window.prompt('Copie le CSV :', csv));
+  }, [buildCsv, flash]);
+
+  const fileBase = () => 'stats_'+(slugify(playerName)||'joueur')+(matchDate?'_'+matchDate:'');
+
+  // ====== RENDER ======
+  const shootCards = [
+    {key:'two', title:'2 PTS', val:totals.twoMade*2, sub:totals.twoMade+'/'+totals.twoAttempted+' · '+pctMini(totals.twoMade,totals.twoAttempted)},
+    {key:'three', title:'3 PTS', val:totals.threeMade*3, sub:totals.threeMade+'/'+totals.threeAttempted+' · '+pctMini(totals.threeMade,totals.threeAttempted)},
+    {key:'ft', title:'LF', val:totals.ftMade, sub:totals.ftMade+'/'+totals.ftAttempted+' · '+pctMini(totals.ftMade,totals.ftAttempted)}
+  ];
+
+  // --- MATCH TAB ---
+  const matchView = e('div', null,
+    e('div', {className:'sec-title'}, 'Tirs'),
+    e('div', {className:'shoot-grid'},
+      shootCards.map(c => e('div', {className:'shoot-card', key:c.key, style:{'--accent':COLORS[c.key]}},
+        e('div', {className:'shoot-head'},
+          e('div', {className:'shoot-title'}, c.title),
+          e('div', {className:'shoot-val'}, c.val)
+        ),
+        e('div', {className:'shoot-sub'}, c.sub),
+        e('div', {className:'shoot-btns'},
+          e('button', {className:'sbtn plus', onClick:()=>addShot(c.key,true)}, '✓'),
+          e('button', {className:'sbtn minus', onClick:()=>addShot(c.key,false)}, '✕')
+        )
+      ))
+    ),
+    e('div', {className:'sec-title'}, 'Jeu'),
+    e('div', {className:'tiles'},
+      e('div', {className:'tile', style:{'--accent':COLORS.reb}},
+        e('div', {className:'tile-title'}, 'Rebonds'),
+        e('div', {className:'tile-row two'},
+          e('button', {className:'tbtn', onClick:()=>addOne('reboundsOff')}, e('span',{className:'tbtn-l'},'Off'), e('span',{className:'tbtn-v'}, totals.reboundsOff)),
+          e('button', {className:'tbtn', onClick:()=>addOne('reboundsDef')}, e('span',{className:'tbtn-l'},'Déf'), e('span',{className:'tbtn-v'}, totals.reboundsDef))
+        )
+      ),
+      e('div', {className:'tile', style:{'--accent':COLORS.def}},
+        e('div', {className:'tile-title'}, 'Défense'),
+        e('div', {className:'tile-row two'},
+          e('button', {className:'tbtn', onClick:()=>addOne('interceptions')}, e('span',{className:'tbtn-l'},'Inter.'), e('span',{className:'tbtn-v'}, totals.interceptions)),
+          e('button', {className:'tbtn', onClick:()=>addOne('blocks')}, e('span',{className:'tbtn-l'},'Contre'), e('span',{className:'tbtn-v'}, totals.blocks))
+        )
+      ),
+      e('div', {className:'tile', style:{'--accent':COLORS.ast}},
+        e('div', {className:'tile-title'}, 'Passes déc.'),
+        e('div', {className:'tile-row'},
+          e('button', {className:'tbtn', onClick:()=>addOne('assists')}, e('span',{className:'tbtn-l'},'Passe'), e('span',{className:'tbtn-v'}, totals.assists))
+        )
+      ),
+      e('div', {className:'tile', style:{'--accent':COLORS.misc}},
+        e('div', {className:'tile-title'}, 'Divers'),
+        e('div', {className:'tile-row two'},
+          e('button', {className:'tbtn', onClick:()=>addOne('turnovers')}, e('span',{className:'tbtn-l'},'B. perdue'), e('span',{className:'tbtn-v'}, totals.turnovers)),
+          e('button', {className:'tbtn', onClick:()=>addOne('fouls')}, e('span',{className:'tbtn-l'},'Faute'), e('span',{className:'tbtn-v'}, totals.fouls))
+        )
+      )
+    ),
+    e('div', {className:'quick-actions'},
+      e('button', {className:'qa', onClick:handleUndo}, '↶ Annuler'),
+      e('button', {className:'qa danger', onClick:handleReset}, '↺ Réinitialiser')
+    )
+  );
+
+  // --- JOUEUR TAB ---
+  const joueurView = e('div', null,
+    e('div', {className:'sec-title'}, 'Le joueur'),
+    e('div', {className:'card'},
+      e('div', {className:'big-jersey'},
+        e(JerseySvg),
+        e('div', {className:'jn'}, (playerNumber||'').slice(0,2))
+      ),
+      e('div', {className:'field-row'},
+        e('div', {className:'field'},
+          e('label', null, 'Numéro'),
+          e('input', {type:'text', inputMode:'numeric', maxLength:2, placeholder:'N°', value:playerNumber,
+            onChange:ev=>setPlayerNumber(ev.target.value.replace(/[^0-9]/g,'').slice(0,2))})
+        ),
+        e('div', {className:'field'},
+          e('label', null, 'Nom du joueur'),
+          e('input', {type:'text', maxLength:24, placeholder:'Prénom Nom', value:playerName,
+            onChange:ev=>setPlayerName(ev.target.value), autoComplete:'off'})
+        )
+      )
+    ),
+    e('div', {className:'sec-title'}, 'Le match'),
+    e('div', {className:'card'},
+      e('div', {className:'field'},
+        e('label', null, 'Date'),
+        e('input', {type:'date', value:matchDate, onChange:ev=>setMatchDate(ev.target.value)})
+      ),
+      e('div', {className:'field'},
+        e('label', null, 'Adversaire'),
+        e('input', {type:'text', maxLength:40, placeholder:'Équipe adverse', value:opponent,
+          onChange:ev=>setOpponent(ev.target.value), autoComplete:'off'})
+      ),
+      e('div', {className:'field'},
+        e('label', null, 'Score final'),
+        e('input', {type:'text', maxLength:20, placeholder:'ex. 62 - 58', value:matchScore,
+          onChange:ev=>setMatchScore(ev.target.value), autoComplete:'off'})
+      )
+    ),
+    e('div', {className:'quick-actions'},
+      e('button', {className:'qa danger full', onClick:handleReset}, '↺ Nouveau match (réinitialiser les stats)')
+    )
+  );
+
+  // --- RESUME TAB ---
+  const sLines = [
+    ['Points', pts, ''],
+    ['Évaluation', eval_, ''],
+    ['Tirs à 2 pts', totals.twoMade+'/'+totals.twoAttempted, pct(totals.twoMade,totals.twoAttempted)],
+    ['Tirs à 3 pts', totals.threeMade+'/'+totals.threeAttempted, pct(totals.threeMade,totals.threeAttempted)],
+    ['Lancers francs', totals.ftMade+'/'+totals.ftAttempted, pct(totals.ftMade,totals.ftAttempted)],
+    ['Rebonds (O/D)', reb, totals.reboundsOff+' off · '+totals.reboundsDef+' déf'],
+    ['Passes décisives', totals.assists, ''],
+    ['Interceptions', totals.interceptions, ''],
+    ['Contres', totals.blocks, ''],
+    ['Balles perdues', totals.turnovers, ''],
+    ['Fautes', totals.fouls, ''],
+    ['Temps de jeu', fmt(playTime.total||0), '']
+  ];
+
+  const liveQuarterTimes = {...playTime.quarterTimes};
+
+  const resumeView = e('div', null,
+    e('div', {className:'sec-title'}, 'Bilan du match'),
+    e('div', {className:'card'},
+      sLines.map((l,i) => e('div', {className:'stat-line', key:i},
+        e('div', {className:'k'}, l[0]),
+        e('div', {className:'v'}, l[1], l[2] ? e('small', null, l[2]) : null)
+      ))
+    ),
+    e('div', {className:'sec-title'}, 'Par période'),
+    e('div', {className:'card'},
+      e('table', {className:'qt-table'},
+        e('thead', null, e('tr', null,
+          e('th', null, 'Pér.'), e('th', null, 'PTS'), e('th', null, 'Temps'),
+          e('th', null, 'REB'), e('th', null, 'PDS'), e('th', null, 'INT'), e('th', null, 'F')
+        )),
+        e('tbody', null, Q_KEYS.map(q => {
+          const r = quarterStats[q] || {...INIT_COUNTERS};
+          return e('tr', {key:q},
+            e('td', null, q),
+            e('td', null, ptsCalc(r)),
+            e('td', null, fmt(liveQuarterTimes[q]||0)),
+            e('td', null, r.reboundsOff+r.reboundsDef),
+            e('td', null, r.assists),
+            e('td', null, r.interceptions),
+            e('td', null, r.fouls)
+          );
+        }))
+      )
+    ),
+    e('div', {className:'sec-title'}, 'Exporter / partager'),
+    e('div', {className:'export-grid'},
+      e('button', {className:'exp', onClick:handleCopy}, e('span',{className:'ico'},'📋'), 'Copier'),
+      e('button', {className:'exp', onClick:()=>dlFile(buildCsv(),'text/csv;charset=utf-8;', fileBase()+'.csv')}, e('span',{className:'ico'},'📄'), 'CSV'),
+      e('button', {className:'exp', onClick:()=>dlFile(buildHtml(),'text/html;charset=utf-8;', fileBase()+'.html')}, e('span',{className:'ico'},'🌐'), 'Tableau')
+    ),
+    e('div', {className:'footer'},
+      e('a', {className:'kofi', href:'https://ko-fi.com/fredericdupuy', target:'_blank', rel:'noopener noreferrer'}, '☕ Soutenir l\u2019appli'),
+      e('div', {className:'kofi-note'}, 'Application gratuite. Un don aide à la faire vivre, merci !'),
+      e('div', {className:'pi'}, '© 2025 Frédéric Dupuy — Œuvre protégée par le droit d\u2019auteur (CPI). Toute reproduction ou utilisation commerciale sans autorisation est interdite.')
+    )
+  );
+
+  return e('div', {className:'app'},
+    // Header ticker (always visible)
+    e('div', {className:'topwrap'},
+      e('div', {className:'ticker'},
+        e('div', {className:'ticker-top'},
+          e('div', {className:'brand'},
+            e('div', {className:'brand-dot'}, '🏀'),
+            e('div', null,
+              e('div', {className:'brand-name'}, 'STATS JOUEUR'),
+              e('div', {className:'brand-sub'}, 'Suivi en direct')
+            )
+          ),
+          e('div', {className:'qt-pill'+(timerRunning?' run':'')},
+            e('span', {className:'dot'}),
+            currentQ
+          )
+        ),
+        e('div', {className:'ticker-main'},
+          e('div', null,
+            e('div', {className:'player-name'}, (playerName.trim()||'Joueur') + (playerNumber.trim()?' #'+playerNumber.trim():'')),
+            e('div', {className:'player-meta'}, (opponent.trim()? 'vs '+opponent.trim() : 'Aucun adversaire') + ' · ' + fmt(playTime.total||0))
+          ),
+          e('div', null,
+            e('div', {className:'pts-big'}, pts),
+            e('div', {className:'pts-label'}, 'Points')
+          )
+        ),
+        e('div', {className:'minis'},
+          [['reb',reb,'REB'],['ast',totals.assists,'PDS'],['int',totals.interceptions,'INT'],['ctr',totals.blocks,'CTR'],['bp',totals.turnovers,'BP'],['ev',eval_,'EVAL']]
+            .map(([k,v,l]) => e('div', {className:'mini', key:k},
+              e('div', {className:'mini-v'}, v),
+              e('div', {className:'mini-l'}, l)
+            ))
+        ),
+        e('div', {className:'chrono'},
+          e('div', {className:'chrono-time'+(timerRunning?' run':'')}, fmt(timerSec)),
+          e('button', {className:'chrono-btn '+(timerRunning?'pause':'play'), onClick:toggleTimer}, timerRunning?'⏸ PAUSE':'▶ DÉPART'),
+          e('button', {className:'chrono-reset', onClick:resetTimer}, '↺')
+        ),
+        e('div', {className:'qt-switch'},
+          Q_KEYS.map(q => e('button', {
+            key:q, className:'qt-tab'+(currentQ===q?' active':''),
+            onClick:()=>changeQuarter(q)
+          }, q==='OT'?'OT':'QT'+q.slice(2)))
+        )
+      )
+    ),
+
+    // Scrollable content per tab
+    e('div', {className:'scroll'},
+      tab==='match' && matchView,
+      tab==='joueur' && joueurView,
+      tab==='resume' && resumeView
+    ),
+
+    // Bottom tab bar
+    e('div', {className:'tabbar'},
+      e('button', {className:'tab'+(tab==='match'?' active':''), onClick:()=>{setTab('match');vibrate(8);}},
+        e('span',{className:'ti'},'🎯'), e('span',{className:'tl'},'Match')),
+      e('button', {className:'tab'+(tab==='joueur'?' active':''), onClick:()=>{setTab('joueur');vibrate(8);}},
+        e('span',{className:'ti'},'👕'), e('span',{className:'tl'},'Joueur')),
+      e('button', {className:'tab'+(tab==='resume'?' active':''), onClick:()=>{setTab('resume');vibrate(8);}},
+        e('span',{className:'ti'},'📊'), e('span',{className:'tl'},'Résumé'))
+    ),
+
+    notice && e('div', {className:'toast'}, notice)
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(e(App));
+</script>
+</body>
+</html>
