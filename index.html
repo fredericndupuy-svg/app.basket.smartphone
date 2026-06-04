@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <title>STATS Joueur · Suivi parent</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Stats Joueur" />
@@ -38,7 +38,8 @@
       --amber:#d97706;
     }
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
-    html, body { width:100%; min-height:100%; }
+    html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+    html, body { width:100%; max-width:100%; min-height:100%; overflow-x:hidden; }
     body {
       background:
         radial-gradient(1100px 560px at 50% -12%, rgba(249,115,22,.10), transparent 60%),
@@ -54,10 +55,13 @@
     button { cursor:pointer; border:none; background:none; }
 
     .app {
-      max-width:520px; margin:0 auto; min-height:100vh;
+      width:100%; min-height:100vh; min-height:100dvh;
       display:flex; flex-direction:column;
       padding-top:env(safe-area-inset-top,0);
       position:relative;
+    }
+    @media (min-width:600px) {
+      .app { max-width:480px; margin:0 auto; box-shadow:0 0 60px -20px rgba(15,23,42,.25); }
     }
     .scroll {
       flex:1; overflow-y:auto; overflow-x:hidden;
@@ -279,14 +283,15 @@
     /* ====== BOTTOM TAB BAR ====== */
     .tabbar {
       position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-      width:100%; max-width:520px;
-      background:rgba(255,255,255,.92); backdrop-filter:blur(16px);
+      width:100%; max-width:480px;
+      background:rgba(255,255,255,.94); backdrop-filter:blur(16px);
       border-top:1px solid var(--line2);
       box-shadow:0 -10px 30px -16px rgba(15,23,42,.18);
       display:grid; grid-template-columns:repeat(3,1fr);
       padding:8px 10px calc(8px + env(safe-area-inset-bottom,0));
       z-index:50;
     }
+    @media (max-width:599px) { .tabbar { max-width:100%; } }
     .tab {
       display:flex; flex-direction:column; align-items:center; gap:3px;
       padding:6px 0; border-radius:14px; color:var(--muted2);
@@ -298,7 +303,7 @@
 
     /* ====== TOAST ====== */
     .toast {
-      position:fixed; left:50%; bottom:calc(96px + env(safe-area-inset-bottom,0));
+      position:fixed; left:50%; bottom:calc(100px + env(safe-area-inset-bottom,0));
       transform:translateX(-50%);
       background:var(--surf); border:1px solid var(--line2);
       color:var(--txt); padding:9px 18px; border-radius:999px;
