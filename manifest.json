@@ -2,7 +2,7 @@
   "name": "Stats Joueur",
   "short_name": "Stats",
   "description": "Suivi de statistiques basketball en direct",
-  "start_url": "./stats_joueur.html",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#f3f5fb",
