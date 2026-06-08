@@ -1,0 +1,24 @@
+{
+  "name": "Stats Joueur",
+  "short_name": "Stats",
+  "description": "Suivi de statistiques basketball en direct",
+  "start_url": "./stats_joueur.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f3f5fb",
+  "theme_color": "#f97316",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
