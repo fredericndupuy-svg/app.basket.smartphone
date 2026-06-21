@@ -42,7 +42,7 @@
     }
     * { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
     html { -webkit-text-size-adjust:100%; text-size-adjust:100%; }
-    html, body { width:100%; max-width:100%; min-height:100%; overflow-x:hidden; }
+    html, body { width:100%; max-width:100%; height:100%; overflow-x:hidden; overflow-y:hidden; }
     img, svg { max-width:100%; }
     /* Empêche les enfants flex/grid de refuser de rétrécir (débordement horizontal) */
     .ticker-main, .minis, .chrono, .qt-switch, .shoot-grid, .shoot-btns,
@@ -66,17 +66,17 @@
     button { cursor:pointer; border:none; background:none; }
 
     .app {
-      width:100%; max-width:100%; min-height:100vh; min-height:100dvh;
+      width:100%; max-width:100%; height:100vh; height:100dvh;
       display:flex; flex-direction:column;
       padding-top:env(safe-area-inset-top,0);
-      position:relative; overflow-x:clip;
+      position:relative; overflow-x:clip; overflow-y:hidden;
     }
     @media (min-width:1024px) {
       .app { max-width:520px; margin:0 auto; box-shadow:0 0 60px -20px rgba(15,23,42,.25); }
     }
     .scroll {
       flex:1; overflow-y:auto; overflow-x:hidden;
-      padding:0 12px calc(68px + env(safe-area-inset-bottom,0));
+      padding:0 12px calc(84px + env(safe-area-inset-bottom,0));
       -webkit-overflow-scrolling:touch;
     }
 
